@@ -1,5 +1,6 @@
 import {HttpFunction} from '@google-cloud/functions-framework/build/src/functions';
 import {InstancesClient, ZoneOperationsClient} from '@google-cloud/compute';
+import {notify} from './notify';
 
 /* notes
 
@@ -76,6 +77,7 @@ const _start: EnvFunc = (env, logger) => {
       });
     }
     logger?.log(operation);
+    notify(`Minecraft Serverをスタートしたよ(operation: ${operation.id})`);
 
     res.status(200);
     res.send('ok');
@@ -101,6 +103,7 @@ const _stop: EnvFunc = (env, logger) => {
       });
     }
     logger?.log(operation);
+    notify(`Minecraft Serverを停止したよ(operation: ${operation.id})`);
 
     res.status(200);
     res.send('ok');
