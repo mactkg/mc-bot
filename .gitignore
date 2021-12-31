@@ -1,0 +1,5 @@
+mc-data/*
+
+!mc-data/server.properties
+!mc-data/ops.json
+!mc-data/whitelist.json
