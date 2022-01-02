@@ -2,9 +2,9 @@ compile:
 	npm run compile
 
 deploy: compile
-	gcloud functions deploy start-mc --entry-point start --runtime nodejs16 --trigger-http --env-vars-file .env.yaml
-	gcloud functions deploy stop-mc --entry-point stop --runtime nodejs16 --trigger-http --env-vars-file .env.yaml
-	gcloud functions deploy info --entry-point getInfo --runtime nodejs16 --trigger-http --env-vars-file .env.yaml
+	gcloud functions deploy start-mc --allow-unauthenticated --entry-point start --runtime nodejs16 --trigger-http --env-vars-file .env.yaml &
+	gcloud functions deploy stop-mc --allow-unauthenticated --entry-point stop --runtime nodejs16 --trigger-http --env-vars-file .env.yaml &
+	gcloud functions deploy info --allow-unauthenticated --entry-point getInfo --runtime nodejs16 --trigger-http --env-vars-file .env.yaml &
 
 test-get-info: compile
 	npx functions-framework --target=getInfo --source=build/src/ --port=8000

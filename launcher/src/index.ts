@@ -1,6 +1,11 @@
-import {HttpFunction} from '@google-cloud/functions-framework/build/src/functions';
+import {
+  Request as GoogleRequest,
+  Response,
+} from '@google-cloud/functions-framework/build/src/functions';
 import {InstancesClient, ZoneOperationsClient} from '@google-cloud/compute';
 import {notify} from './notify';
+import {checkCORS} from './checkCORS';
+import {checkJWT} from './checkJWT';
 
 /* notes
 
@@ -12,6 +17,12 @@ type Logger = Console;
 type Env = NodeJS.ProcessEnv;
 type Func = (logger?: Logger) => HttpFunction;
 type EnvFunc = (env: Env, logger?: Logger) => HttpFunction;
+export interface Request extends GoogleRequest {
+  email?: string;
+}
+export interface HttpFunction {
+  (req: Request, res: Response): any;
+}
 
 const _echo: Func = logger => {
   return (req, res) => {
@@ -34,8 +45,13 @@ const getServerConfig = (env: Env) => {
   } as ServerConfig;
 };
 
-const _getInfo: EnvFunc = (env, logger) => {
-  return async (_, res) => {
+const _getInfo: EnvFunc = (env, _) => {
+  return async (req, res) => {
+    if (req.method !== 'GET') {
+      res.status(404).send('');
+      return;
+    }
+
     const config = getServerConfig(env);
     const cli = new InstancesClient();
     const [instanceList] = await cli.list({
@@ -45,11 +61,11 @@ const _getInfo: EnvFunc = (env, logger) => {
 
     const data = [];
     for (const instance of instanceList) {
-      const {id, name} = instance;
-      logger?.log(instance);
+      const {id, name, status} = instance;
       data.push({
         id,
         name,
+        status,
       });
     }
 
@@ -59,7 +75,12 @@ const _getInfo: EnvFunc = (env, logger) => {
 };
 
 const _start: EnvFunc = (env, logger) => {
-  return async (_, res) => {
+  return async (req, res) => {
+    if (req.method !== 'POST') {
+      res.status(404).send('');
+      return;
+    }
+
     const config = getServerConfig(env);
     const cli = new InstancesClient();
     let [operation] = await cli.start({
@@ -77,7 +98,9 @@ const _start: EnvFunc = (env, logger) => {
       });
     }
     logger?.log(operation);
-    notify(`Minecraft Serverをスタートしたよ(operation: ${operation.id})`);
+    notify(
+      `Minecraft Serverをスタートしたよ(operation: ${operation.id}, user: ${req.email})`
+    );
 
     res.status(200);
     res.send('ok');
@@ -85,7 +108,12 @@ const _start: EnvFunc = (env, logger) => {
 };
 
 const _stop: EnvFunc = (env, logger) => {
-  return async (_, res) => {
+  return async (req, res) => {
+    if (req.method !== 'POST') {
+      res.status(404).send('');
+      return;
+    }
+
     const config = getServerConfig(env);
     const cli = new InstancesClient();
     let [operation] = await cli.stop({
@@ -103,7 +131,9 @@ const _stop: EnvFunc = (env, logger) => {
       });
     }
     logger?.log(operation);
-    notify(`Minecraft Serverを停止したよ(operation: ${operation.id})`);
+    notify(
+      `Minecraft Serverを停止したよ(operation: ${operation.id}, user: ${req.email})`
+    );
 
     res.status(200);
     res.send('ok');
@@ -111,7 +141,8 @@ const _stop: EnvFunc = (env, logger) => {
 };
 
 // registration
-export const echo = _echo(console);
-export const getInfo = _getInfo(process.env, console);
-export const start = _start(process.env, console);
-export const stop = _stop(process.env, console);
+const check = (next: HttpFunction): HttpFunction => checkJWT(checkCORS(next));
+export const echo = check(_echo(console));
+export const getInfo = check(_getInfo(process.env, console));
+export const start = check(_start(process.env, console));
+export const stop = check(_stop(process.env, console));
