@@ -1,7 +1,9 @@
 /** @type {import('next').NextConfig} */
+const prod = process.env.NODE_ENV === 'production';
+
 module.exports = {
   reactStrictMode: true,
-  assetPrefix: '/mc-bot',
+  assetPrefix: prod ? '/mc-bot' : '',
   async headers() {
     return [
       {
