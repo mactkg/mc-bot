@@ -3,7 +3,7 @@ import Head from 'next/head'
 import styles from '../styles/Home.module.css'
 import favicon from '../public/favicon.ico'
 
-import { GoogleLogin } from 'react-google-login';
+import { GoogleLogin, GoogleLogout } from 'react-google-login';
 import { useEffect, useState } from 'react';
 import { useGetServerInfo } from '../lib/actions/getServerInfo';
 import { useOperateServer } from '../lib/actions/operateServer';
@@ -13,9 +13,13 @@ const Home: NextPage = () => {
   const apiCallback = (response: any) => {
     if(response.error) {
       console.error(response.error)
+      console.info(response.details)
     }
 
     setToken(response.tokenId)
+  }
+  const logoutSuccess = () => {
+    setToken('');
   }
 
   const {getInfo, info, loading} = useGetServerInfo(token)
@@ -36,16 +40,24 @@ const Home: NextPage = () => {
       </header>
       <div className={styles.main}>
         {
-          token ?
-            <p>Authorized</p> :
-            <GoogleLogin
-              clientId="771328302406-ueq170qv6pnsd23k4oter2go10ne0mt0.apps.googleusercontent.com"
-              buttonText="Login"
-              onSuccess={apiCallback}
-              onFailure={apiCallback}
-              cookiePolicy={'single_host_origin'}
-              isSignedIn={true}
-            />
+          token ? (
+              <>
+                <p>Authorized.</p>
+                <GoogleLogout 
+                  clientId="771328302406-ueq170qv6pnsd23k4oter2go10ne0mt0.apps.googleusercontent.com"
+                  onLogoutSuccess={logoutSuccess}
+                />
+              </>
+            ) : (
+              <GoogleLogin
+                clientId="771328302406-ueq170qv6pnsd23k4oter2go10ne0mt0.apps.googleusercontent.com"
+                buttonText="Login"
+                onSuccess={apiCallback}
+                onFailure={apiCallback}
+                cookiePolicy={'single_host_origin'}
+                isSignedIn={true}
+              />
+            )
         }
 
         <div>{info}</div>
