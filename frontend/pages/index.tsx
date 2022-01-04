@@ -8,6 +8,8 @@ import { useEffect, useState } from 'react';
 import { useGetServerInfo } from '../lib/actions/getServerInfo';
 import { useOperateServer } from '../lib/actions/operateServer';
 
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID as string
+
 const Home: NextPage = () => {
   const [token, setToken] = useState("")
   const apiCallback = (response: any) => {
@@ -44,13 +46,13 @@ const Home: NextPage = () => {
               <>
                 <p>Authorized.</p>
                 <GoogleLogout 
-                  clientId="771328302406-ueq170qv6pnsd23k4oter2go10ne0mt0.apps.googleusercontent.com"
+                  clientId={GOOGLE_CLIENT_ID}
                   onLogoutSuccess={logoutSuccess}
                 />
               </>
             ) : (
               <GoogleLogin
-                clientId="771328302406-ueq170qv6pnsd23k4oter2go10ne0mt0.apps.googleusercontent.com"
+                clientId={GOOGLE_CLIENT_ID}
                 buttonText="Login"
                 onSuccess={apiCallback}
                 onFailure={apiCallback}

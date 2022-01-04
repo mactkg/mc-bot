@@ -35,6 +35,8 @@ jobs:
 
       - name: build
         run: npm run build
+        env:
+          NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID }}
 
       - name: add nojekyll
         run: touch ./out/.nojekyll
